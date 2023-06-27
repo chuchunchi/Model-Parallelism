@@ -12,6 +12,7 @@ from accelerate import Accelerator
 
 from torchvision.transforms import ToTensor
 def main():
+    torch.distributed.init_process_group(backend='gloo')
     dataset = load_dataset("huggingface/cats-image")
     image = dataset["test"]["image"][0]
 
