@@ -10,15 +10,18 @@ import torch
 from datasets import load_dataset
 from accelerate import Accelerator
 
+from torchvision.transforms import ToTensor
 def main():
     dataset = load_dataset("huggingface/cats-image")
     image = dataset["test"]["image"][0]
 
     # Initialize the accelerator
     accelerator = Accelerator()
-
+    device = accelerator.device
+    transform = ToTensor()
+    image = transform(image)
     # Move the image tensor to the appropriate device
-    image = accelerator.to_device(image)
+    image = image.to(device)
 
     feature_extractor = AutoFeatureExtractor.from_pretrained("microsoft/resnet-18")
     model = AutoModelForImageClassification.from_pretrained("microsoft/resnet-18")
@@ -40,29 +43,6 @@ def main():
     predicted_label = logits.argmax(-1).item()
     print(model.config.id2label[predicted_label])
 
-    '''
-    dataset = load_dataset("huggingface/cats-image")
-    image = dataset["test"]["image"][0]
-
-    feature_extractor = AutoFeatureExtractor.from_pretrained("microsoft/resnet-18")
-
-    checkpoint = "microsoft/resnet-18"
-    config = AutoConfig.from_pretrained(checkpoint)
-
-    with init_empty_weights():
-        model = ResNetForImageClassification.from_pretrained("microsoft/resnet-18")
-        model.tie_weights()
-        model = load_checkpoint_and_dispatch(model, "microsoft/resnet-18" ''', device_map=my_device_map''')
-
-    inputs = feature_extractor(image, return_tensors="pt")
-
-    with torch.no_grad():
-        logits = model(**inputs).logits
-
-    # model predicts one of the 1000 ImageNet classes
-    predicted_label = logits.argmax(-1).item()
-    print(model.config.id2label[predicted_label])
-    '''
-
+    
 if __name__ == '__main__':
     main()
