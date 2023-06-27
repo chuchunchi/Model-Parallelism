@@ -17,6 +17,7 @@ import torch.optim as optim
 
 import string
 from accelerate import Accelerator
+from accelerate import init_empty_weigh
 from torcheval.metrics.functional import throughput
 import time
 accelerator = Accelerator()
