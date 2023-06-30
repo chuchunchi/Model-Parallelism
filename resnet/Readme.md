@@ -1,0 +1,17 @@
+accelerate config
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------In which compute environment are you running?
+This machine                                                                                                                                                                                                          
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------Which type of machine are you using?                                                                                                                                                                                  
+multi-CPU                                                                                                                                                                                                             
+How many different machines will you use (use more than 1 for multi-node training)? [1]: 2                                                                                                                            
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------What is the rank of this machine?                                                                                                                                                                                     
+0                                                                                                                                                                                                                     
+What is the IP address of the machine that will host the main process? 192.168.9.19                                                                                                                                   
+What is the port you will use to communicate with the main process? 60000                                                                                                                                             
+Are all the machines on the same local network? Answer `no` if nodes are on the cloud and/or on different network hosts [YES/no]: YES
+Do you want to use Intel PyTorch Extension (IPEX) to speed up training on CPU? [yes/NO]:NO
+Do you wish to optimize your script with torch dynamo?[yes/NO]:NO
+How many CPU(s) should be used for distributed training? [1]:2
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------Do you wish to use FP16 or BF16 (mixed precision)?
+fp16                                                                                                                                                                                                                  
+accelerate configuration saved at /home/cadlab/.cache/huggingface/accelerate/default_config.yaml 
