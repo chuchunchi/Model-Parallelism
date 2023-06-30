@@ -25,25 +25,25 @@ def main():
     image = image.to(device)
 
     feature_extractor = AutoFeatureExtractor.from_pretrained("microsoft/resnet-18")
-    model = AutoModelForImageClassification.from_pretrained("microsoft/resnet-18")
+    model_o = AutoModelForImageClassification.from_pretrained("microsoft/resnet-18")
 
     # Move the feature extractor and model to the appropriate device(s)
     feature_extractor = accelerator.prepare(feature_extractor)
-    model = accelerator.prepare(model)
+    model = accelerator.prepare(model_o)
 
     inputs = feature_extractor(image, return_tensors="pt")
 
     with torch.no_grad():
         # Use the `model.forward` method instead of `model.__call__` for compatibility with Accelerate
         logits = model(**inputs).logits
-    print(logits)
-    # Synchronize the results across devices
+    '''print(logits)
+    Synchronize the results across devices
     logits = accelerator.gather(logits)
-
+    
     # Model predicts one of the 1000 ImageNet classes
-    print(logits)
+    print(logits)'''
     predicted_label = logits.argmax(-1).item()
-    print(model.config.id2label[predicted_label])
+    print(model_o.config.id2label[predicted_label])
 
     
 if __name__ == '__main__':
