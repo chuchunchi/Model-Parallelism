@@ -36,11 +36,12 @@ def main():
     with torch.no_grad():
         # Use the `model.forward` method instead of `model.__call__` for compatibility with Accelerate
         logits = model(**inputs).logits
-
+    print(logits)
     # Synchronize the results across devices
     logits = accelerator.gather(logits)
 
     # Model predicts one of the 1000 ImageNet classes
+    print(logits)
     predicted_label = logits.argmax(-1).item()
     print(model.config.id2label[predicted_label])
 

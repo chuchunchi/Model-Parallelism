@@ -1,4 +1,3 @@
-我的雲端硬碟
 import csv
 import cv2
 import numpy as np
@@ -17,7 +16,6 @@ import torch.optim as optim
 
 import string
 from accelerate import Accelerator
-from accelerate import init_empty_weigh
 from torcheval.metrics.functional import throughput
 import time
 accelerator = Accelerator()
