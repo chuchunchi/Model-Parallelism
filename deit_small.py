@@ -55,7 +55,7 @@ def main():
     model = DeiTForImageClassificationWithTeacher.from_pretrained('facebook/deit-small-distilled-patch16-224')
     model = accelerator.prepare(model)
     batch_size = 1
-    benchmark(model=model, device=device, input_shape=(batch_size, 3, 224, 224), dtype="fp32", num_warmup=50, num_runs=1000)
+    benchmark(model=model, device=device, input_shape=(batch_size, 3, 224, 224), dtype="fp32", num_warmup=50, num_runs=500)
 
 
     
