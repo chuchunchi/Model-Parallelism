@@ -1,6 +1,6 @@
 # from https://huggingface.co/microsoft/resnet-18/
 
-from transformers import AutoFeatureExtractor, ResNetForImageClassification
+from transformers import AutoFeatureExtractor, DeiTForImageClassificationWithTeacher
 import torch
 from datasets import load_dataset
 from accelerate import init_empty_weights, load_checkpoint_and_dispatch
@@ -50,8 +50,9 @@ def main():
     accelerator = Accelerator()
     device = accelerator.device
     MODEL_NAME = "deit_small_distilled_patch16_224"
-    model = timm.create_model(MODEL_NAME, pretrained=True, scriptable=True)
-
+    # model = timm.create_model(MODEL_NAME, pretrained=True, scriptable=True)
+    # feature_extractor = AutoFeatureExtractor.from_pretrained('facebook/deit-small-distilled-patch16-224')
+    model = DeiTForImageClassificationWithTeacher.from_pretrained('facebook/deit-small-distilled-patch16-224')
     model = accelerator.prepare(model)
     batch_size = 1
     benchmark(model=model, device=device, input_shape=(batch_size, 3, 224, 224), dtype="fp32", num_warmup=50, num_runs=1000)
