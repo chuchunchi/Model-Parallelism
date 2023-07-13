@@ -6,5 +6,8 @@ main_process_ip = <IP_OF_MACHINE_0>
 ```
 and run the following command in two machines.
 ```
-accelerate launch --config_file config.yaml resnet18.py
+export RANK=<MACHINE_NUM>
+export WORLD_SIZE=2
+export GLOO_SOCKET_IFNAME=eth0
+accelerate launch resnet18.py
 ```
