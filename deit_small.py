@@ -26,15 +26,15 @@ def layer_benchmark(layer, hidden_size, seq_lens, batch_sizes, cross_attention=F
     encoder_state = 'encoder_hidden_states=X' if cross_attention else ''
     for s in seq_lens:
         for b in batch_sizes:            
-            ffn = 16*b*s*h*h / 1e12  # TFLOPS for the Feed-Forward Network
-            atten = (4*b*h*s*s + 8*b*s*h*h) / 1e12  # TFLOPS for attention            
+            ffn = 16*b*s*h*h / 1e9  # GFLOPS for the Feed-Forward Network
+            atten = (4*b*h*s*s + 8*b*s*h*h) / 1e9  # GFLOPS for attention            
             forward = ffn + (2 if cross_attention else 1) * atten
             
-            X = torch.randn(b, s, h).half().to(device)
+            X = torch.randn(b, s, 224, 224).half().to(device)
             results[f'batch={b}'][f'fwd seq_len={s}'] = forward / walltime(
-                f'layer(X, {encoder_state})', var_dict={'layer': layer, 'X': X})
+                f'layer(X, {encoder_state})', arg_dict={'layer': layer, 'X': X})
             results[f'batch={b}'][f'fwd+bwd seq_len={s}'] = 3 * forward / walltime(
-                f'layer(X, {encoder_state})[0].sum().backward()', var_dict={'layer': layer, 'X': X})            
+                f'layer(X, {encoder_state})[0].sum().backward()', arg_dict={'layer': layer, 'X': X})            
     return pd.DataFrame(results)
 
 def main():
@@ -49,7 +49,7 @@ def main():
     model = accelerator.prepare(model)
 
     # Assuming your DeiT model has hidden_size as 768, you can use the same benchmark function
-    layer_benchmark(model, hidden_size=768, seq_lens=[128, 512], batch_sizes=[2, 4, 8, 16, 32, 64, 128], device=device)
+    print(layer_benchmark(model, hidden_size=224, seq_lens=[3], batch_sizes=[1, 2], device=device))
 
 if __name__ == '__main__':
     main()
