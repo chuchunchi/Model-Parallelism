@@ -4,6 +4,10 @@ from collections import defaultdict
 from transformers import AutoConfig, BertLayer
 from torch.distributed import init_process_group
 from transformers import DeiTForImageClassificationWithTeacher, Accelerator
+from torch.utils import benchmark
+
+def walltime(stmt, arg_dict, duration=10):
+    return benchmark.Timer(stmt=stmt, globals=arg_dict).blocked_autorange(min_run_time=duration).median
 
 def walltime(code, var_dict):
     torch.cuda.synchronize()
