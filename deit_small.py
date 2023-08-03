@@ -20,7 +20,7 @@ def walltime(stmt, arg_dict, duration=10):
     torch.cuda.synchronize()
     return start.elapsed_time(end)
 '''
-def layer_benchmark(layer, hidden_size, seq_lens, batch_sizes, cross_attention=False):
+def layer_benchmark(layer, hidden_size, seq_lens, batch_sizes, cross_attention=False, device='cuda'):
     h = hidden_size
     results = defaultdict(lambda: {})    
     encoder_state = 'encoder_hidden_states=X' if cross_attention else ''
@@ -30,7 +30,7 @@ def layer_benchmark(layer, hidden_size, seq_lens, batch_sizes, cross_attention=F
             atten = (4*b*h*s*s + 8*b*s*h*h) / 1e12  # TFLOPS for attention            
             forward = ffn + (2 if cross_attention else 1) * atten
             
-            X = torch.randn(b, s, h).half().cuda()
+            X = torch.randn(b, s, h).half().to(device)
             results[f'batch={b}'][f'fwd seq_len={s}'] = forward / walltime(
                 f'layer(X, {encoder_state})', var_dict={'layer': layer, 'X': X})
             results[f'batch={b}'][f'fwd+bwd seq_len={s}'] = 3 * forward / walltime(
@@ -49,7 +49,7 @@ def main():
     model = accelerator.prepare(model)
 
     # Assuming your DeiT model has hidden_size as 768, you can use the same benchmark function
-    layer_benchmark(model, hidden_size=768, seq_lens=[128, 512], batch_sizes=[2, 4, 8, 16, 32, 64, 128])
+    layer_benchmark(model, hidden_size=768, seq_lens=[128, 512], batch_sizes=[2, 4, 8, 16, 32, 64, 128], device=device)
 
 if __name__ == '__main__':
     main()
