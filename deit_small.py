@@ -8,7 +8,9 @@ from accelerate import Accelerator
 from torch.utils import benchmark
 
 def walltime(stmt, arg_dict, duration=10):
-    return benchmark.Timer(stmt=stmt, globals=arg_dict).blocked_autorange(min_run_time=duration).median
+    t = benchmark.Timer(stmt=stmt, globals=arg_dict).blocked_autorange(min_run_time=duration).median
+    print(t)
+    return t
 
 '''def walltime(code, var_dict):
     torch.cuda.synchronize()
@@ -30,7 +32,7 @@ def layer_benchmark(layer, hidden_size, seq_lens, batch_sizes, cross_attention=F
             atten = (4*b*h*s*s + 8*b*s*h*h) / 1e9  # GFLOPS for attention            
             forward = ffn + (2 if cross_attention else 1) * atten
             
-            X = torch.randn(b, s, 224, 224).half().to(device)
+            X = torch.randn(b, s, 224, 224).to(device)
             results[f'batch={b}'][f'fwd seq_len={s}'] = forward / walltime(
                 f'layer(X, {encoder_state})', arg_dict={'layer': layer, 'X': X})
             results[f'batch={b}'][f'fwd+bwd seq_len={s}'] = 3 * forward / walltime(
@@ -49,7 +51,7 @@ def main():
     model = accelerator.prepare(model)
 
     # Assuming your DeiT model has hidden_size as 768, you can use the same benchmark function
-    print(layer_benchmark(model, hidden_size=224, seq_lens=[3], batch_sizes=[1, 2], device=device))
+    print(layer_benchmark(model.to(device), hidden_size=768, seq_lens=[3, 3], batch_sizes=[1], device=device))
 
 if __name__ == '__main__':
     main()
