@@ -34,10 +34,10 @@ def layer_benchmark(layer, hidden_size, seq_lens, batch_sizes, cross_attention=F
 
 def deit(rank, world_size):
     # Initialize distributed training
-    accelerate.launch(backend='gloo', local_rank=rank, num_processes=world_size)
+    # accelerate.launch(backend='gloo', local_rank=rank, num_processes=world_size)
 
     # Initialize the accelerator
-    accelerator = accelerate.Accelerator(num_processes=world_size)
+    accelerator = accelerate.Accelerator()
     device = accelerator.device
     MODEL_NAME = "deit_small_distilled_patch16_224"
     model = DeiTForImageClassificationWithTeacher.from_pretrained('facebook/deit-small-distilled-patch16-224')
