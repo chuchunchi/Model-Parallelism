@@ -2,17 +2,14 @@
 
 from transformers import AutoFeatureExtractor, DeiTForImageClassificationWithTeacher
 import torch
-from datasets import load_dataset
 from accelerate import init_empty_weights, load_checkpoint_and_dispatch
 # from transformers import AutoConfig, AutoModelForCausalLM
 from transformers import AutoFeatureExtractor, AutoModelForImageClassification
 import torch
-from datasets import load_dataset
 from accelerate import Accelerator
 import time
 from torchvision.transforms import ToTensor
 import numpy as np
-import timm
 
 def benchmark(model, device="cuda", input_shape=(1, 3, 224, 224), dtype='fp32', num_warmup=50, num_runs=1000):
     input_data = torch.randn(input_shape)
