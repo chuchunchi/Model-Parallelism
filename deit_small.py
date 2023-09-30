@@ -54,4 +54,5 @@ def main():
     print(layer_benchmark(model.to(device), hidden_size=768, seq_lens=[3, 3], batch_sizes=[1], device=device))
 
 if __name__ == '__main__':
+    # Use address of one of the machines
     main()
