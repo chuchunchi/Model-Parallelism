@@ -85,7 +85,10 @@ world_size = int(os.environ["WORLD_SIZE"])
 # https://pytorch.org/docs/stable/rpc.html
 import torch.distributed.rpc as rpc
 
-rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size)
+rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size, rpc_backend_options=rpc.TensorPipeRpcBackendOptions(
+         num_worker_threads=16,
+         rpc_timeout=2000 # 2000 second timeout
+    ))
 
 # PiPPy relies on the concept of a "driver" process. The driver process
 # should be a single process within the RPC group that instantiates the
