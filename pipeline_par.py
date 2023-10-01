@@ -1,8 +1,8 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates
 import torch
 from typing import Any
-
-
+import time
+import numpy as np
 class MyNetworkBlock(torch.nn.Module):
     def __init__(self, in_dim, out_dim):
         super().__init__()
@@ -135,6 +135,20 @@ if local_rank == 0:
     # Run the pipeline with input `x`. Divide the batch into 64 micro-batches
     # and run them in parallel on the pipeline
     output = driver(x)
+    timings = []
+    num_runs = 100
+    with torch.no_grad():
+        for i in range(1, num_runs+1):
+            start_time = time.perf_counter()
+            output = driver(x)
+            end_time = time.perf_counter()
+            timings.append(end_time - start_time)
+            if i%(num_runs/10)==0:
+                print('Iteration %d/%d, avg batch time %.2f ms'%(i, num_runs, np.mean(timings)*1000))
+
+    print('Latency per query: %.2f ms'%((np.mean(timings))*1000))
+    print('Latency for %d runs: %.2f ms'%(num_runs, (np.sum(timings))*1000))
+
 
     # Run the original code and get the output for comparison
     reference_output = mn(x)
