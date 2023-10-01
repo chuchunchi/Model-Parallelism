@@ -146,18 +146,19 @@ if local_rank == 0:
             output = driver(x)
             end_time = time.perf_counter()
             timings.append(end_time - start_time)
-            if i%(num_runs/10)==0:
+            if i%(num_runs/5)==0:
                 print('Iteration %d/%d, avg batch time %.2f ms'%(i, num_runs, np.mean(timings)*1000))
 
     print('Latency per query: %.2f ms'%((np.mean(timings))*1000))
     
+    timings = []
     with torch.no_grad():
         for i in range(1, num_runs+1):
             start_time = time.perf_counter()
             reference_output = mn(x)
             end_time = time.perf_counter()
             timings.append(end_time - start_time)
-            if i%(num_runs/10)==0:
+            if i%(num_runs/5)==0:
                 print('Iteration %d/%d, avg batch time %.2f ms'%(i, num_runs, np.mean(timings)*1000))
 
     print('Latency per query without pipeline: %.2f ms'%((np.mean(timings))*1000))
