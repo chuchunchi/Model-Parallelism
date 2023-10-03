@@ -1,38 +1,44 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates
-import os
-import pippy
-from torch.distributed import rpc
-from torch import nn
 import torch
 from typing import Any
 import time
 import numpy as np
-class Net(nn.Module):
-    def __init__(self):
+class MyNetworkBlock(torch.nn.Module):
+    def __init__(self, in_dim, out_dim):
         super().__init__()
-        self.fc1 = nn.Linear(768*4*4, 768*4*4)
-        self.fc2 = nn.Linear(768*4*4, 768*4*4)
-        #self.fc3 = nn.Linear(768*4*4, 768*4*4)
-        # self.fc4 = nn.Linear(768, 128)
-        
+        self.lin = torch.nn.Linear(in_dim, out_dim)
+
     def forward(self, x):
-        # for i in range(300):
-        x = self.fc1(x)
-        x = nn.functional.relu(x)
-        x = self.fc2(x)
-        x = nn.functional.relu(x)
-        #x = self.fc3(x)
-        #x = nn.functional.relu(x)
-            # x = self.fc4(x)
+        x = self.lin(x)
+        x = torch.relu(x)
         return x
 
-net = Net()
-net.eval()
 
+class MyNetwork(torch.nn.Module):
+    def __init__(self, in_dim, layer_dims):
+        super().__init__()
+
+        prev_dim = in_dim
+        for i, dim in enumerate(layer_dims):
+            setattr(self, f"layer{i}", MyNetworkBlock(prev_dim, dim))
+            prev_dim = dim
+
+        self.num_layers = len(layer_dims)
+        # 10 output classes
+        self.output_proj = torch.nn.Linear(layer_dims[-1], 10)
+
+    def forward(self, x):
+        for i in range(self.num_layers):
+            x = getattr(self, f"layer{i}")(x)
+
+        return self.output_proj(x)
+
+
+mn = MyNetwork(512, [1024, 2048, 512])
 
 from pippy.IR import Pipe
 
-pipe = Pipe.from_tracing(net)
+pipe = Pipe.from_tracing(mn)
 print(pipe)
 print(pipe.split_gm.submod_0)
 
@@ -40,14 +46,14 @@ print(pipe.split_gm.submod_0)
 from pippy.IR import annotate_split_points, PipeSplitWrapper
 
 annotate_split_points(
-    net,
+    mn,
     {
         "layer0": PipeSplitWrapper.SplitPoint.END,
-        "layer1": PipeSplitWrapper.SplitPoint.END
+        "layer1": PipeSplitWrapper.SplitPoint.END,
     },
 )
 
-pipe = Pipe.from_tracing(net)
+pipe = Pipe.from_tracing(mn)
 print(" pipe ".center(80, "*"))
 print(pipe)
 print(" submod0 ".center(80, "*"))
@@ -56,8 +62,6 @@ print(" submod1 ".center(80, "*"))
 print(pipe.split_gm.submod_1)
 print(" submod2 ".center(80, "*"))
 print(pipe.split_gm.submod_2)
-#print(" submod3 ".center(80, "*"))
-#print(pipe.split_gm.submod_3)
 
 
 # To run a distributed training job, we must launch the script in multiple
@@ -136,24 +140,6 @@ if local_rank == 0:
     output = driver(x)
     timings = []
     num_runs = 100
-    
-    
-    
-    with torch.no_grad():
-        for i in range(1, num_runs+1):
-            start_time = time.perf_counter()
-            reference_output = net(x)
-            end_time = time.perf_counter()
-            timings.append(end_time - start_time)
-            if i%(num_runs/5)==0:
-                print('Iteration %d/%d, avg batch time %.2f ms'%(i, num_runs, np.mean(timings)*1000))
-    nonpipe_time = ((np.mean(timings))*1000)
-    print('Latency per query without pipeline: %.2f ms'%nonpipe_time)
-
-
-    timings = []
-    
-    
     with torch.no_grad():
         for i in range(1, num_runs+1):
             start_time = time.perf_counter()
@@ -162,18 +148,26 @@ if local_rank == 0:
             timings.append(end_time - start_time)
             if i%(num_runs/5)==0:
                 print('Iteration %d/%d, avg batch time %.2f ms'%(i, num_runs, np.mean(timings)*1000))
-    pipe_time = ((np.mean(timings))*1000)
-    print('Latency per query: %.2f ms'%pipe_time)
+
+    print('Latency per query: %.2f ms'%((np.mean(timings))*1000))
+    
+    timings = []
+    with torch.no_grad():
+        for i in range(1, num_runs+1):
+            start_time = time.perf_counter()
+            reference_output = mn(x)
+            end_time = time.perf_counter()
+            timings.append(end_time - start_time)
+            if i%(num_runs/5)==0:
+                print('Iteration %d/%d, avg batch time %.2f ms'%(i, num_runs, np.mean(timings)*1000))
+
+    print('Latency per query without pipeline: %.2f ms'%((np.mean(timings))*1000))
     
     # Run the original code and get the output for comparison
-    reference_output = net(x)
+    reference_output = mn(x)
 
     # Compare numerics of pipeline and original model
     torch.testing.assert_close(output, reference_output)
-
-    print('Communication time: ', str(pipe_time - nonpipe_time))
-
-    print('Speed up: ', str(nonpipe_time / pipe_time))
 
     print(" Pipeline parallel model ran successfully! ".center(80, "*"))
 
