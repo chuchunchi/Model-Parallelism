@@ -3,7 +3,7 @@ import torch
 from typing import Any
 import time
 import numpy as np
-class MyNetworkBlock(torch.nn.Module):
+class MyNetwork(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.fc1 = torch.nn.Linear(768*4*4, 768*4*4)
@@ -19,14 +19,14 @@ class MyNetworkBlock(torch.nn.Module):
         x = torch.nn.functional.relu(x)
         return x
 
-
+'''
 class MyNetwork(torch.nn.Module):
-    def __init__(self, in_dim, layer_dims):
+    def __init__(self):
         super().__init__()
 
         prev_dim = in_dim
         for i, dim in enumerate(layer_dims):
-            setattr(self, f"layer{i}", MyNetworkBlock(prev_dim, dim))
+            setattr(self, f"layer{i}", MyNetworkBlock())
             prev_dim = dim
 
         self.num_layers = len(layer_dims)
@@ -38,9 +38,9 @@ class MyNetwork(torch.nn.Module):
             x = getattr(self, f"layer{i}")(x)
 
         return self.output_proj(x)
+'''
 
-
-mn = MyNetwork(512, [512, 1024, 256])
+mn = MyNetwork()
 
 from pippy.IR import Pipe
 
