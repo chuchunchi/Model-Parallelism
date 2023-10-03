@@ -12,7 +12,7 @@ class Net(nn.Module):
         super().__init__()
         self.fc1 = nn.Linear(768*4*4, 768*4*4)
         self.fc2 = nn.Linear(768*4*4, 768*4*4)
-        self.fc3 = nn.Linear(768*4*4, 768*4*4)
+        #self.fc3 = nn.Linear(768*4*4, 768*4*4)
         # self.fc4 = nn.Linear(768, 128)
         
     def forward(self, x):
@@ -21,8 +21,8 @@ class Net(nn.Module):
         x = nn.functional.relu(x)
         x = self.fc2(x)
         x = nn.functional.relu(x)
-        x = self.fc3(x)
-        x = nn.functional.relu(x)
+        #x = self.fc3(x)
+        #x = nn.functional.relu(x)
             # x = self.fc4(x)
         return x
 
@@ -43,8 +43,7 @@ annotate_split_points(
     net,
     {
         "layer0": PipeSplitWrapper.SplitPoint.END,
-        "layer1": PipeSplitWrapper.SplitPoint.END,
-        "layer2": PipeSplitWrapper.SplitPoint.END
+        "layer1": PipeSplitWrapper.SplitPoint.END
     },
 )
 
@@ -57,8 +56,8 @@ print(" submod1 ".center(80, "*"))
 print(pipe.split_gm.submod_1)
 print(" submod2 ".center(80, "*"))
 print(pipe.split_gm.submod_2)
-print(" submod3 ".center(80, "*"))
-print(pipe.split_gm.submod_3)
+#print(" submod3 ".center(80, "*"))
+#print(pipe.split_gm.submod_3)
 
 
 # To run a distributed training job, we must launch the script in multiple
