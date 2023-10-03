@@ -44,10 +44,11 @@ annotate_split_points(
     {
         "layer0": PipeSplitWrapper.SplitPoint.END,
         "layer1": PipeSplitWrapper.SplitPoint.END,
+        "layer2": PipeSplitWrapper.SplitPoint.END
     },
 )
 
-pipe = Pipe.from_tracing(mn)
+pipe = Pipe.from_tracing(net)
 print(" pipe ".center(80, "*"))
 print(pipe)
 print(" submod0 ".center(80, "*"))
