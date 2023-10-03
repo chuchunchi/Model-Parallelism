@@ -4,13 +4,19 @@ from typing import Any
 import time
 import numpy as np
 class MyNetworkBlock(torch.nn.Module):
-    def __init__(self, in_dim, out_dim):
+    def __init__(self):
         super().__init__()
-        self.lin = torch.nn.Linear(in_dim, out_dim)
+        self.fc1 = torch.nn.Linear(768*4*4, 768*4*4)
+        self.fc2 = torch.nn.Linear(768*4*4, 768*4*4)
+        self.fc3 = torch.nn.Linear(768*4*4, 768*4*4)
 
     def forward(self, x):
-        x = self.lin(x)
-        x = torch.relu(x)
+        x = self.fc1(x)
+        x = torch.nn.functional.relu(x)
+        x = self.fc2(x)
+        x = torch.nn.functional.relu(x)
+        x = self.fc3(x)
+        x = torch.nn.functional.relu(x)
         return x
 
 
@@ -140,18 +146,9 @@ if local_rank == 0:
     output = driver(x)
     timings = []
     num_runs = 100
-    with torch.no_grad():
-        for i in range(1, num_runs+1):
-            start_time = time.perf_counter()
-            output = driver(x)
-            end_time = time.perf_counter()
-            timings.append(end_time - start_time)
-            if i%(num_runs/5)==0:
-                print('Iteration %d/%d, avg batch time %.2f ms'%(i, num_runs, np.mean(timings)*1000))
-
-    print('Latency per query: %.2f ms'%((np.mean(timings))*1000))
     
-    timings = []
+    
+    
     with torch.no_grad():
         for i in range(1, num_runs+1):
             start_time = time.perf_counter()
@@ -160,14 +157,33 @@ if local_rank == 0:
             timings.append(end_time - start_time)
             if i%(num_runs/5)==0:
                 print('Iteration %d/%d, avg batch time %.2f ms'%(i, num_runs, np.mean(timings)*1000))
+    nonpipe_time = ((np.mean(timings))*1000)
+    print('Latency per query without pipeline: %.2f ms'%nonpipe_time)
 
-    print('Latency per query without pipeline: %.2f ms'%((np.mean(timings))*1000))
+
+    timings = []
+    
+    
+    with torch.no_grad():
+        for i in range(1, num_runs+1):
+            start_time = time.perf_counter()
+            output = driver(x)
+            end_time = time.perf_counter()
+            timings.append(end_time - start_time)
+            if i%(num_runs/5)==0:
+                print('Iteration %d/%d, avg batch time %.2f ms'%(i, num_runs, np.mean(timings)*1000))
+    pipe_time = ((np.mean(timings))*1000)
+    print('Latency per query: %.2f ms'%pipe_time)
     
     # Run the original code and get the output for comparison
     reference_output = mn(x)
 
     # Compare numerics of pipeline and original model
     torch.testing.assert_close(output, reference_output)
+
+    print('Communication time: ', str(pipe_time - nonpipe_time))
+
+    print('Speed up: ', str(nonpipe_time / pipe_time))
 
     print(" Pipeline parallel model ran successfully! ".center(80, "*"))
 
