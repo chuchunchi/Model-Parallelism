@@ -57,6 +57,8 @@ print(" submod1 ".center(80, "*"))
 print(pipe.split_gm.submod_1)
 print(" submod2 ".center(80, "*"))
 print(pipe.split_gm.submod_2)
+print(" submod3 ".center(80, "*"))
+print(pipe.split_gm.submod_3)
 
 
 # To run a distributed training job, we must launch the script in multiple
