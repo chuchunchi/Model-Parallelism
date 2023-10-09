@@ -55,8 +55,8 @@ def main():
     if rank == 0:  
         model = DistributedDataParallel(model)
     
-    batch_size = 1
-    benchmark(model=model, device=device, input_shape=(batch_size, 3, 224, 224), dtype="fp32", num_warmup=50, num_runs=500)
+        batch_size = 1
+        benchmark(model=model, device=device, input_shape=(batch_size, 3, 224, 224), dtype="fp32", num_warmup=50, num_runs=500)
     
 if __name__ == '__main__':
     main()
