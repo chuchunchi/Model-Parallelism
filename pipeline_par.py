@@ -34,7 +34,8 @@ class MyNetwork(torch.nn.Module):
         return self.output_proj(x)
 
 
-mn = MyNetwork(512, [512, 1024, 256])
+#mn = MyNetwork(512, [512, 1024, 256])
+mn = MyNetwork(512, [2048, 4096, 1024])
 
 from pippy.IR import Pipe
 
