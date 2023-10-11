@@ -7,9 +7,12 @@ class MyNetworkBlock(torch.nn.Module):
     def __init__(self, in_dim, out_dim):
         super().__init__()
         self.lin = torch.nn.Linear(in_dim, out_dim)
+        self.lin2 = torch.nn.Linear(out_dim, out_dim)
 
     def forward(self, x):
         x = self.lin(x)
+        x = torch.relu(x)
+        x = self.lin2(x)
         x = torch.relu(x)
         return x
 
@@ -34,8 +37,8 @@ class MyNetwork(torch.nn.Module):
         return self.output_proj(x)
 
 
-#mn = MyNetwork(512, [512, 1024, 256])
-mn = MyNetwork(512, [1024, 2048, 512])
+mn = MyNetwork(512, [512, 1024, 256])
+#mn = MyNetwork(512, [1024, 2048, 512])
 
 from pippy.IR import Pipe
 
@@ -51,6 +54,7 @@ annotate_split_points(
     {
         "layer0": PipeSplitWrapper.SplitPoint.END,
         "layer1": PipeSplitWrapper.SplitPoint.END,
+        "layer2": PipeSplitWrapper.SplitPoint.END,
     },
 )
 
@@ -63,7 +67,8 @@ print(" submod1 ".center(80, "*"))
 print(pipe.split_gm.submod_1)
 print(" submod2 ".center(80, "*"))
 print(pipe.split_gm.submod_2)
-
+print(" submod3 ".center(80, "*"))
+print(pipe.split_gm.submod_3)
 
 # To run a distributed training job, we must launch the script in multiple
 # different processes. We are using `torchrun` to do so in this example.
