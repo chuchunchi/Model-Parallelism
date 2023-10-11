@@ -3,16 +3,14 @@ import torch
 from typing import Any
 import time
 import numpy as np
+
 class MyNetworkBlock(torch.nn.Module):
     def __init__(self, in_dim, out_dim):
         super().__init__()
         self.lin = torch.nn.Linear(in_dim, out_dim)
-        self.lin2 = torch.nn.Linear(out_dim, out_dim)
 
     def forward(self, x):
         x = self.lin(x)
-        x = torch.relu(x)
-        x = self.lin2(x)
         x = torch.relu(x)
         return x
 
@@ -36,8 +34,8 @@ class MyNetwork(torch.nn.Module):
 
         return self.output_proj(x)
 
-
-mn = MyNetwork(512, [512, 1024, 256])
+#mn = MyNetwork(512, [512, 1024, 256])
+mn = MyNetwork(128, [128, 256, 64])
 #mn = MyNetwork(512, [1024, 2048, 512])
 
 from pippy.IR import Pipe
@@ -139,7 +137,8 @@ if local_rank == 0:
         output_chunk_spec=output_chunk_spec,
     )
 
-    x = torch.randn(512, 512)
+    #x = torch.randn(512, 512)
+    x = torch.randn(128, 128)
 
     # Run the pipeline with input `x`. Divide the batch into 64 micro-batches
     # and run them in parallel on the pipeline

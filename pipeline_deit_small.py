@@ -3,46 +3,16 @@ import torch
 from typing import Any
 import time
 import numpy as np
-class MyNetworkBlock(torch.nn.Module):
-    def __init__(self, in_dim, out_dim):
-        super().__init__()
-        self.lin = torch.nn.Linear(in_dim, out_dim)
-
-    def forward(self, x):
-        x = self.lin(x)
-        x = torch.relu(x)
-        return x
-
-
-class MyNetwork(torch.nn.Module):
-    def __init__(self, in_dim, layer_dims):
-        super().__init__()
-
-        prev_dim = in_dim
-        for i, dim in enumerate(layer_dims):
-            setattr(self, f"layer{i}", MyNetworkBlock(prev_dim, dim))
-            prev_dim = dim
-
-        self.num_layers = len(layer_dims)
-        # 10 output classes
-        self.output_proj = torch.nn.Linear(layer_dims[-1], 10)
-
-    def forward(self, x):
-        for i in range(self.num_layers):
-            x = getattr(self, f"layer{i}")(x)
-
-        return self.output_proj(x)
-
-#mn = MyNetwork(512, [512, 1024, 256])
-mn = MyNetwork(128, [128, 256, 64])
-#mn = MyNetwork(512, [1024, 2048, 512])
-
+from collections import defaultdict
+from transformers import DeiTForImageClassificationWithTeacher
 from pippy.IR import Pipe
 
 pipe = Pipe.from_tracing(mn)
 print(pipe)
 print(pipe.split_gm.submod_0)
 
+MODEL_NAME = "deit_small_distilled_patch16_224"
+mn = DeiTForImageClassificationWithTeacher.from_pretrained('facebook/deit-small-distilled-patch16-224')
 
 from pippy.IR import annotate_split_points, PipeSplitWrapper
 
