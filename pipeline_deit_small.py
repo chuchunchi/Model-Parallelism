@@ -12,6 +12,8 @@ from pippy import run_pippy
 from pippy.hf import PiPPyHFTracer, inject_pipeline_forward
 
 
+from accelerate import Accelerator
+
 
 MODEL_NAME = "deit_small_distilled_patch16_224"
 mn = DeiTForImageClassificationWithTeacher.from_pretrained('facebook/deit-small-distilled-patch16-224')
@@ -101,8 +103,10 @@ if local_rank == 0:
         output_chunk_spec=output_chunk_spec,
     )'''
 
+    accelerator = Accelerator()
+    device = accelerator.device
     #x = torch.randn(512, 512)
-    x = torch.randn(1, 3, 224, 224)
+    x = torch.randn(1, 3, 224, 224).to(device)
 
     # Run the pipeline with input `x`. Divide the batch into 64 micro-batches
     # and run them in parallel on the pipeline
