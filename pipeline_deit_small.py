@@ -50,6 +50,7 @@ rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size, rpc_
 # PipelineDriver and issues commands on that object. The other processes
 # in the RPC group will receive commands from this process and execute
 # the pipeline stages
+print("**************** My Rank: %d ****************", local_rank)
 if local_rank == 0:
     # We are going to use the PipelineDriverFillDrain class. This class
     # provides an interface for executing the `Pipe` in a style similar
