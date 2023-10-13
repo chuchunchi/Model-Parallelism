@@ -89,7 +89,7 @@ if local_rank == 0:
         num_ranks,
         64,
         split_policy=split_policy,
-        tracer=PiPPyHFTracer(),
+        tracer=None, #PiPPyHFTracer(),
         concrete_args=concrete_args,
         index_filename=None,
         checkpoint_prefix=None,
@@ -107,7 +107,7 @@ if local_rank == 0:
 
     #x = torch.randn(512, 512)
     x = torch.randn(1, 3, 224, 224)
-
+    num_runs = 100
     timings = []
     with torch.no_grad():
         for i in range(1, num_runs+1):
@@ -123,7 +123,7 @@ if local_rank == 0:
     
     output = driver(x)
     timings = []
-    num_runs = 100
+    
     with torch.no_grad():
         for i in range(1, num_runs+1):
             start_time = time.perf_counter()
