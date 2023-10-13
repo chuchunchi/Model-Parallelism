@@ -76,6 +76,7 @@ if local_rank == 0:
     # chunk specs, and world size, and the constructor will distribute
     # our code to the processes in the RPC group. `driver` is an object
     # we can invoke to run the pipeline.
+    num_ranks = world_size
     split_policy = pippy.split_into_equal_size(num_ranks)
     concrete_args = pippy.create_default_args(
         mn,
@@ -83,7 +84,7 @@ if local_rank == 0:
     )
     driver, stage_mod = pippy.all_compile(
         mn,
-        world_size,
+        num_ranks,
         64,
         split_policy=split_policy,
         tracer=PiPPyHFTracer(),
