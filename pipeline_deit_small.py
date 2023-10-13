@@ -102,7 +102,7 @@ if local_rank == 0:
     )'''
 
     #x = torch.randn(512, 512)
-    x = torch.randn(128, 128)
+    x = torch.randn(1, 3, 224, 224)
 
     # Run the pipeline with input `x`. Divide the batch into 64 micro-batches
     # and run them in parallel on the pipeline
