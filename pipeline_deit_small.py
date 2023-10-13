@@ -16,9 +16,6 @@ from pippy.hf import PiPPyHFTracer, inject_pipeline_forward
 MODEL_NAME = "deit_small_distilled_patch16_224"
 mn = DeiTForImageClassificationWithTeacher.from_pretrained('facebook/deit-small-distilled-patch16-224')
 
-pipe = Pipe.from_tracing(mn)
-print(pipe)
-print(pipe.split_gm.submod_0)
 # To run a distributed training job, we must launch the script in multiple
 # different processes. We are using `torchrun` to do so in this example.
 # `torchrun` defines two environment variables: `LOCAL_RANK` and `WORLD_SIZE`,
