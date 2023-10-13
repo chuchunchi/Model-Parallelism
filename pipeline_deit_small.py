@@ -6,6 +6,10 @@ import numpy as np
 from collections import defaultdict
 from transformers import DeiTForImageClassificationWithTeacher
 from pippy.IR import Pipe
+import pippy
+import pippy.fx
+from pippy import run_pippy
+from pippy.hf import PiPPyHFTracer, inject_pipeline_forward
 
 pipe = Pipe.from_tracing(mn)
 print(pipe)
@@ -14,28 +18,6 @@ print(pipe.split_gm.submod_0)
 MODEL_NAME = "deit_small_distilled_patch16_224"
 mn = DeiTForImageClassificationWithTeacher.from_pretrained('facebook/deit-small-distilled-patch16-224')
 
-from pippy.IR import annotate_split_points, PipeSplitWrapper
-
-annotate_split_points(
-    mn,
-    {
-        "layer0": PipeSplitWrapper.SplitPoint.END,
-        "layer1": PipeSplitWrapper.SplitPoint.END,
-        "layer2": PipeSplitWrapper.SplitPoint.END,
-    },
-)
-
-pipe = Pipe.from_tracing(mn)
-print(" pipe ".center(80, "*"))
-print(pipe)
-print(" submod0 ".center(80, "*"))
-print(pipe.split_gm.submod_0)
-print(" submod1 ".center(80, "*"))
-print(pipe.split_gm.submod_1)
-print(" submod2 ".center(80, "*"))
-print(pipe.split_gm.submod_2)
-print(" submod3 ".center(80, "*"))
-print(pipe.split_gm.submod_3)
 
 # To run a distributed training job, we must launch the script in multiple
 # different processes. We are using `torchrun` to do so in this example.
@@ -97,14 +79,29 @@ if local_rank == 0:
     # chunk specs, and world size, and the constructor will distribute
     # our code to the processes in the RPC group. `driver` is an object
     # we can invoke to run the pipeline.
-    driver = PipelineDriverFillDrain(
+    split_policy = pippy.split_into_equal_size(num_ranks)
+    concrete_args = pippy.create_default_args(
+        mn,
+        except_keys="input_ids",
+    )
+    driver, stage_mod = pippy.all_compile(
+        mn,
+        world_size,
+        64,
+        split_policy=split_policy,
+        tracer=PiPPyHFTracer(),
+        concrete_args=concrete_args,
+        index_filename=None,
+        checkpoint_prefix=None,
+    )
+    '''driver = PipelineDriverFillDrain(
         pipe,
         64,
         world_size=world_size,
         args_chunk_spec=args_chunk_spec,
         kwargs_chunk_spec=kwargs_chunk_spec,
         output_chunk_spec=output_chunk_spec,
-    )
+    )'''
 
     #x = torch.randn(512, 512)
     x = torch.randn(128, 128)
