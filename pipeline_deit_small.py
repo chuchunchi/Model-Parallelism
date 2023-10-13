@@ -28,9 +28,10 @@ mn = DeiTForImageClassification.from_pretrained('facebook/deit-small-distilled-p
 # To learn more about `torchrun`, see
 # https://pytorch.org/docs/stable/elastic/run.html
 import os
-
-local_rank = int(os.environ["LOCAL_RANK"])
-world_size = int(os.environ["WORLD_SIZE"])
+local_rank=0
+world_size=4
+#local_rank = int(os.environ["LOCAL_RANK"])
+#world_size = int(os.environ["WORLD_SIZE"])
 
 # PiPPy uses the PyTorch RPC interface. To use RPC, we must call `init_rpc`
 # and inform the RPC framework of this process's rank and the total world
@@ -39,10 +40,12 @@ world_size = int(os.environ["WORLD_SIZE"])
 # To learn more about the PyTorch RPC framework, see
 # https://pytorch.org/docs/stable/rpc.html
 import torch.distributed.rpc as rpc
-
+import torch.distributed as dist
+dist.init_process_group(backend='gloo', init_method='tcp://192.168.1.100:50000', rank=local_rank, world_size=4)
 rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size, rpc_backend_options=rpc.TensorPipeRpcBackendOptions(
-         num_worker_threads=16,
-         rpc_timeout=2000 # 2000 second timeout
+         num_worker_threads=1,
+         rpc_timeout=2000, # 2000 second timeout
+	init_method=f"tcp://192.168.1.100:50000",
     ))
 
 # PiPPy relies on the concept of a "driver" process. The driver process
@@ -52,6 +55,7 @@ rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size, rpc_
 # the pipeline stages
 print("**************** My Rank: %d ****************", local_rank)
 if local_rank == 0:
+    print("RANK=0")
     # We are going to use the PipelineDriverFillDrain class. This class
     # provides an interface for executing the `Pipe` in a style similar
     # to the GPipe fill-drain schedule. To learn more about GPipe and
