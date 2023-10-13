@@ -91,7 +91,7 @@ import torch.distributed.rpc as rpc
 
 rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size, rpc_backend_options=rpc.TensorPipeRpcBackendOptions(
          num_worker_threads=16,
-         rpc_timeout=2000 # 2000 second timeout
+         rpc_timeout=2000 # 2000 second timeout\
     ))
 
 # PiPPy relies on the concept of a "driver" process. The driver process
