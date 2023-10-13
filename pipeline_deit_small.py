@@ -4,19 +4,20 @@ from typing import Any
 import time
 import numpy as np
 from collections import defaultdict
-from transformers import DeiTForImageClassificationWithTeacher
+from transformers import AutoImageProcessor, DeiTForImageClassification
 from pippy.IR import Pipe
 import pippy
 import pippy.fx
 from pippy import run_pippy
 from pippy.hf import PiPPyHFTracer, inject_pipeline_forward
 
-
+from PIL import Image
+import requests
 from accelerate import Accelerator
 
 
 MODEL_NAME = "deit_small_distilled_patch16_224"
-mn = DeiTForImageClassificationWithTeacher.from_pretrained('facebook/deit-small-distilled-patch16-224')
+mn = DeiTForImageClassification.from_pretrained('facebook/deit-small-distilled-patch16-224')
 
 # To run a distributed training job, we must launch the script in multiple
 # different processes. We are using `torchrun` to do so in this example.
@@ -80,16 +81,27 @@ if local_rank == 0:
     # we can invoke to run the pipeline.
     num_ranks = world_size
     split_policy = pippy.split_into_equal_size(num_ranks)
+    bs = 1 * num_ranks
+    url = "http://images.cocodataset.org/val2017/000000039769.jpg"
+    image = Image.open(requests.get(url, stream=True).raw)
+    image_processor = AutoImageProcessor.from_pretrained("facebook/deit-base-distilled-patch16-224")
+    inputs = image_processor(images=image, return_tensors="pt")
+    input_dict = {
+        'pixel_values': inputs,}
+    ''''input_ids': torch.zeros(bs, seq_length, dtype=torch.long, device=device).random_(bert.config.vocab_size),
+    'labels': torch.zeros(bs, dtype=torch.long, device=device).random_(bert.config.vocab_size),
+    'attention_mask': torch.ones(bs, seq_length, device=device)'''
     concrete_args = pippy.create_default_args(
         mn,
-        except_keys="input_ids",
+        except_keys=input_dict.keys(),
     )
+
     driver, stage_mod = pippy.all_compile(
         mn,
         num_ranks,
         64,
         split_policy=split_policy,
-        tracer=None, #PiPPyHFTracer(),
+        tracer=PiPPyHFTracer(),
         concrete_args=concrete_args,
         index_filename=None,
         checkpoint_prefix=None,
