@@ -33,6 +33,7 @@ os.environ["WORLD_SIZE"]='4'
 os.environ["MASTER_ADDR"]='192.168.1.100'
 os.environ["MASTER_PORT"]='50000'
 os.environ["GLOO_SOCKET_IFNAME"]='eth0'
+os.environ["TP_SOCKET_IFNAME"] = "eth0"
 local_rank = int(os.environ["LOCAL_RANK"])
 world_size = int(os.environ["WORLD_SIZE"])
 
@@ -47,10 +48,10 @@ import torch.distributed as dist
 
 # Define device mappings
 device_maps = {
+    "worker0": {0: "cpu"},
     "worker1": {0: "cpu"},
     "worker2": {0: "cpu"},
-    "worker3": {0: "cpu"},
-    "worker4": {0: "cpu"}
+    "worker3": {0: "cpu"}
 }
 
 # Define local devices for the RPC agent
@@ -63,17 +64,17 @@ options = rpc.TensorPipeRpcBackendOptions(
     # device_maps=device_maps,
     # devices=devices
 )
-for i in range(world_size):
-    options.set_device_map(f"worker{i}", {i})
+# for i in range(world_size):
+#    options.set_device_map(f"worker{i}", {i: i})
 #dist.init_process_group(backend='gloo', init_method='tcp://192.168.1.100:50000', rank=local_rank, world_size=4)
-rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size, rpc_backend_options=options)
+rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size, backend=rpc.BackendType.TENSORPIPE, rpc_backend_options=options)
 
 # PiPPy relies on the concept of a "driver" process. The driver process
 # should be a single process within the RPC group that instantiates the
 # PipelineDriver and issues commands on that object. The other processes
 # in the RPC group will receive commands from this process and execute
 # the pipeline stages
-print("**************** My Rank: %d ****************", (local_rank,))
+print(f"**************** My Rank: {local_rank} ****************")
 if local_rank == 0:
     print("RANK=0")
     # We are going to use the PipelineDriverFillDrain class. This class
