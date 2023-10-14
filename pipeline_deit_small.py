@@ -64,7 +64,7 @@ options = rpc.TensorPipeRpcBackendOptions(
     # devices=devices
 )
 for i in range(world_size):
-    options.set_device_map(f"worker{i}", {i})
+    options.set_device_map(f"worker{i}", {i: i})
 #dist.init_process_group(backend='gloo', init_method='tcp://192.168.1.100:50000', rank=local_rank, world_size=4)
 rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size, rpc_backend_options=options)
 
