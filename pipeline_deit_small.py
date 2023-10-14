@@ -28,10 +28,13 @@ mn = DeiTForImageClassification.from_pretrained('facebook/deit-small-distilled-p
 # To learn more about `torchrun`, see
 # https://pytorch.org/docs/stable/elastic/run.html
 import os
-local_rank=0
-world_size=4
-#local_rank = int(os.environ["LOCAL_RANK"])
-#world_size = int(os.environ["WORLD_SIZE"])
+os.environ["LOCAL_RANK"]=0
+os.environ["WORLD_SIZE"]=4
+os.environ["MASTER_ADDR"]='192.168.1.100'
+os.environ["MASTER_PORT"]=50000
+os.environ["GLOO_SOCKET_IFNAME"]='eth0'
+local_rank = int(os.environ["LOCAL_RANK"])
+world_size = int(os.environ["WORLD_SIZE"])
 
 # PiPPy uses the PyTorch RPC interface. To use RPC, we must call `init_rpc`
 # and inform the RPC framework of this process's rank and the total world
@@ -41,11 +44,11 @@ world_size=4
 # https://pytorch.org/docs/stable/rpc.html
 import torch.distributed.rpc as rpc
 import torch.distributed as dist
-dist.init_process_group(backend='gloo', init_method='tcp://192.168.1.100:50000', rank=local_rank, world_size=4)
+#dist.init_process_group(backend='gloo', init_method='tcp://192.168.1.100:50000', rank=local_rank, world_size=4)
 rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size, rpc_backend_options=rpc.TensorPipeRpcBackendOptions(
-         num_worker_threads=1,
+         num_worker_threads=4,
          rpc_timeout=2000, # 2000 second timeout
-	init_method=f"tcp://192.168.1.100:50000",
+	#init_method=f"tcp://192.168.1.100:50000",
     ))
 
 # PiPPy relies on the concept of a "driver" process. The driver process
@@ -53,7 +56,7 @@ rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size, rpc_
 # PipelineDriver and issues commands on that object. The other processes
 # in the RPC group will receive commands from this process and execute
 # the pipeline stages
-print("**************** My Rank: %d ****************", local_rank)
+print("**************** My Rank: %d ****************", (local_rank,))
 if local_rank == 0:
     print("RANK=0")
     # We are going to use the PipelineDriverFillDrain class. This class
@@ -92,10 +95,8 @@ if local_rank == 0:
     image_processor = AutoImageProcessor.from_pretrained("facebook/deit-base-distilled-patch16-224")
     inputs = image_processor(images=image, return_tensors="pt")
     input_dict = {
-        'pixel_values': inputs,}
-    ''''input_ids': torch.zeros(bs, seq_length, dtype=torch.long, device=device).random_(bert.config.vocab_size),
-    'labels': torch.zeros(bs, dtype=torch.long, device=device).random_(bert.config.vocab_size),
-    'attention_mask': torch.ones(bs, seq_length, device=device)'''
+        'pixel_values': inputs,
+    }
     concrete_args = pippy.create_default_args(
         mn,
         except_keys=input_dict.keys(),
@@ -111,19 +112,9 @@ if local_rank == 0:
         index_filename=None,
         checkpoint_prefix=None,
     )
-    # Run the pipeline with input `x`. Divide the batch into 64 micro-batches
-    # and run them in parallel on the pipeline
-    '''driver = PipelineDriverFillDrain(
-        pipe,
-        64,
-        world_size=world_size,
-        args_chunk_spec=args_chunk_spec,
-        kwargs_chunk_spec=kwargs_chunk_spec,
-        output_chunk_spec=output_chunk_spec,
-    )'''
 
     #x = torch.randn(512, 512)
-    x = torch.randn(1, 3, 224, 224)
+    x = inputs
     num_runs = 100
     timings = []
     with torch.no_grad():
