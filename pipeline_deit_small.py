@@ -44,12 +44,26 @@ world_size = int(os.environ["WORLD_SIZE"])
 # https://pytorch.org/docs/stable/rpc.html
 import torch.distributed.rpc as rpc
 import torch.distributed as dist
+
+# Define device mappings
+device_maps = {
+    "worker1": {0: "cpu"},
+    "worker2": {0: "cpu"},
+    "worker3": {0: "cpu"},
+    "worker4": {0: "cpu"}
+}
+
+# Define local devices for the RPC agent
+devices = ["cpu", "cpu"]
+
 #dist.init_process_group(backend='gloo', init_method='tcp://192.168.1.100:50000', rank=local_rank, world_size=4)
 rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size, rpc_backend_options=rpc.TensorPipeRpcBackendOptions(
-         num_worker_threads=4,
-         rpc_timeout=2000, # 2000 second timeout
-	#init_method=f"tcp://192.168.1.100:50000",
-    ))
+    num_worker_threads=4,
+    rpc_timeout=2000, # 2000 second timeout
+    #init_method=f"tcp://192.168.1.100:50000",
+    device_maps=device_maps,
+    devices=devices
+))
 
 # PiPPy relies on the concept of a "driver" process. The driver process
 # should be a single process within the RPC group that instantiates the
