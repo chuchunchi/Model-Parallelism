@@ -54,16 +54,19 @@ device_maps = {
 }
 
 # Define local devices for the RPC agent
-devices = ["cpu", "cpu"]
-
-#dist.init_process_group(backend='gloo', init_method='tcp://192.168.1.100:50000', rank=local_rank, world_size=4)
-rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size, rpc_backend_options=rpc.TensorPipeRpcBackendOptions(
+devices = ["cpu", "cpu", "cpu", "cpu"]
+# Set device mappings from this worker to other RPC callees
+options = rpc.TensorPipeRpcBackendOptions(
     num_worker_threads=4,
-    rpc_timeout=2000, # 2000 second timeout
+    # rpc_timeout=2000, # 2000 second timeout
     #init_method=f"tcp://192.168.1.100:50000",
-    device_maps=device_maps,
-    devices=devices
-))
+    # device_maps=device_maps,
+    # devices=devices
+)
+for i in range(world_size):
+    options.set_device_map(f"worker{i}", {i})
+#dist.init_process_group(backend='gloo', init_method='tcp://192.168.1.100:50000', rank=local_rank, world_size=4)
+rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size, rpc_backend_options=options)
 
 # PiPPy relies on the concept of a "driver" process. The driver process
 # should be a single process within the RPC group that instantiates the
