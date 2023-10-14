@@ -28,10 +28,10 @@ mn = DeiTForImageClassification.from_pretrained('facebook/deit-small-distilled-p
 # To learn more about `torchrun`, see
 # https://pytorch.org/docs/stable/elastic/run.html
 import os
-os.environ["LOCAL_RANK"]=0
-os.environ["WORLD_SIZE"]=4
+os.environ["LOCAL_RANK"]='0'
+os.environ["WORLD_SIZE"]='4'
 os.environ["MASTER_ADDR"]='192.168.1.100'
-os.environ["MASTER_PORT"]=50000
+os.environ["MASTER_PORT"]='50000'
 os.environ["GLOO_SOCKET_IFNAME"]='eth0'
 local_rank = int(os.environ["LOCAL_RANK"])
 world_size = int(os.environ["WORLD_SIZE"])
