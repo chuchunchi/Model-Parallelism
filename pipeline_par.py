@@ -35,7 +35,7 @@ class MyNetwork(torch.nn.Module):
         return self.output_proj(x)
 
 #mn = MyNetwork(512, [512, 1024, 256])
-mn = MyNetwork(128, [128, 256, 64])
+mn = MyNetwork(128, [128, 256, 64, 64])
 #mn = MyNetwork(512, [1024, 2048, 512])
 
 from pippy.IR import Pipe
@@ -80,6 +80,8 @@ import os
 
 local_rank = int(os.environ["LOCAL_RANK"])
 world_size = int(os.environ["WORLD_SIZE"])
+os.environ["MASTER_ADDR"] = 'localhost'
+os.environ["MASTER_PORT"] = '50000'
 
 # PiPPy uses the PyTorch RPC interface. To use RPC, we must call `init_rpc`
 # and inform the RPC framework of this process's rank and the total world
@@ -99,6 +101,7 @@ rpc.init_rpc(f"worker{local_rank}", rank=local_rank, world_size=world_size, rpc_
 # PipelineDriver and issues commands on that object. The other processes
 # in the RPC group will receive commands from this process and execute
 # the pipeline stages
+print(f"**************** My Rank: {local_rank} ****************")
 if local_rank == 0:
     # We are going to use the PipelineDriverFillDrain class. This class
     # provides an interface for executing the `Pipe` in a style similar
@@ -178,3 +181,4 @@ if local_rank == 0:
 
 
 rpc.shutdown()
+print("SHUTDOWN", local_rank)
