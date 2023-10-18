@@ -17,8 +17,8 @@ from accelerate import Accelerator
 
 
 MODEL_NAME = "deit_small_distilled_patch16_224"
-mn = DeiTForImageClassification.from_pretrained('facebook/deit-small-distilled-patch16-224')
-
+model = DeiTForImageClassification.from_pretrained('facebook/deit-small-distilled-patch16-224')
+mn = torch.compile(model, backend="inductor")
 # To run a distributed training job, we must launch the script in multiple
 # different processes. We are using `torchrun` to do so in this example.
 # `torchrun` defines two environment variables: `LOCAL_RANK` and `WORLD_SIZE`,
@@ -29,11 +29,12 @@ mn = DeiTForImageClassification.from_pretrained('facebook/deit-small-distilled-p
 # https://pytorch.org/docs/stable/elastic/run.html
 import os
 os.environ["LOCAL_RANK"]='0'
+# rank = dist.get_rank()
 os.environ["WORLD_SIZE"]='4'
-os.environ["MASTER_ADDR"]='192.168.1.100'
+os.environ["MASTER_ADDR"]='localhost'
 os.environ["MASTER_PORT"]='50000'
-os.environ["GLOO_SOCKET_IFNAME"]='eth0'
-os.environ["TP_SOCKET_IFNAME"] = "eth0"
+os.environ["GLOO_SOCKET_IFNAME"]='en0'
+os.environ["TP_SOCKET_IFNAME"] = "en0"
 local_rank = int(os.environ["LOCAL_RANK"])
 world_size = int(os.environ["WORLD_SIZE"])
 

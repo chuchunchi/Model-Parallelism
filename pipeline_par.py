@@ -35,7 +35,8 @@ class MyNetwork(torch.nn.Module):
         return self.output_proj(x)
 
 #mn = MyNetwork(512, [512, 1024, 256])
-mn = MyNetwork(128, [128, 256, 64, 64])
+model = MyNetwork(128, [128, 256, 64, 64])
+mn = torch.compile(model, backend="inductor")
 #mn = MyNetwork(512, [1024, 2048, 512])
 
 from pippy.IR import Pipe
