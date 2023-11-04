@@ -1,0 +1,57 @@
+
+
+Measuring average inference latecy of PatchEmbed over 10 run.
+  - compile Model = False
+  - batch size = 1
+  - transformer blocks = PatchEmbed
+  - nums_threads = 1
+Inference time for 12 blocks: iteration_0 = 0.026 || average = 0.026 seconds 
+Inference time for 12 blocks: iteration_1 = 0.029 || average = 0.027 seconds 
+Inference time for 12 blocks: iteration_2 = 0.026 || average = 0.027 seconds 
+Inference time for 12 blocks: iteration_3 = 0.025 || average = 0.026 seconds 
+Inference time for 12 blocks: iteration_4 = 0.038 || average = 0.029 seconds 
+Inference time for 12 blocks: iteration_5 = 0.050 || average = 0.032 seconds 
+Inference time for 12 blocks: iteration_6 = 0.046 || average = 0.034 seconds 
+Inference time for 12 blocks: iteration_7 = 0.043 || average = 0.035 seconds 
+Inference time for 12 blocks: iteration_8 = 0.046 || average = 0.036 seconds 
+Inference time for 12 blocks: iteration_9 = 0.047 || average = 0.038 seconds 
+
+
+Measuring average inference latecy of deit_small_patch16_224 over 10 run.
+  - compile Model = False
+  - batch size = 1
+  - transformer blocks = 12
+  - nums_threads = 1
+Inference time for 12 blocks: iteration_0 = 1.248 || average = 1.248 seconds 
+Inference time for 12 blocks: iteration_1 = 1.248 || average = 1.248 seconds 
+Inference time for 12 blocks: iteration_2 = 1.245 || average = 1.247 seconds 
+Inference time for 12 blocks: iteration_3 = 1.265 || average = 1.251 seconds 
+Inference time for 12 blocks: iteration_4 = 1.251 || average = 1.251 seconds 
+Inference time for 12 blocks: iteration_5 = 1.244 || average = 1.250 seconds 
+Inference time for 12 blocks: iteration_6 = 1.250 || average = 1.250 seconds 
+Inference time for 12 blocks: iteration_7 = 3.363 || average = 1.514 seconds 
+Inference time for 12 blocks: iteration_8 = 3.354 || average = 1.719 seconds 
+Inference time for 12 blocks: iteration_9 = 3.223 || average = 1.869 seconds 
+
+
+Measuring average inference latecy of deit_small_patch16_224 over 10 run.
+  - compile Model = False
+  - batch size = 1
+  - transformer blocks = 1
+  - nums_threads = 1
+Inference time for 1 blocks: iteration_0 = 0.303 || average = 0.303 seconds 
+Inference time for 1 blocks: iteration_1 = 0.304 || average = 0.304 seconds 
+Inference time for 1 blocks: iteration_2 = 0.306 || average = 0.304 seconds 
+Inference time for 1 blocks: iteration_3 = 0.302 || average = 0.304 seconds 
+Inference time for 1 blocks: iteration_4 = 0.309 || average = 0.305 seconds 
+Inference time for 1 blocks: iteration_5 = 0.306 || average = 0.305 seconds 
+Inference time for 1 blocks: iteration_6 = 0.269 || average = 0.300 seconds 
+Inference time for 1 blocks: iteration_7 = 0.169 || average = 0.284 seconds 
+Inference time for 1 blocks: iteration_8 = 0.307 || average = 0.286 seconds 
+Inference time for 1 blocks: iteration_9 = 0.303 || average = 0.288 seconds 
+--- Latency(sec) ---
+transformer block + patchEmbed: 1 block = 0.287799946393352 || 12 block = 1.8692127723013983
+ - speedup (12 block + 1 patchEmbed)/(1 block + 1 patchEmbed) = 6.49
+
+transformer block: 1 block = 0.2502800580929033 || 12 block = 1.8316928840009497
+ - speedup (12 block/ 1 block) = 7.32

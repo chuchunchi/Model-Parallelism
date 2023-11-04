@@ -1,0 +1,76 @@
+import timm, torch
+import numpy as np
+from PIL import Image
+
+from urllib.request import urlopen
+import time
+
+def measure_latency(
+    model:torch.nn.modules, 
+    measure_times=100, 
+    warm_up=3, 
+    compile_model=False, 
+    num_threads=2,
+    num_model_blocks=12,
+    input_shape=(1, 3, 224, 224)
+):
+    torch.set_num_threads(num_threads)
+    MEASURE_TIMES = measure_times
+    WARM_UP = warm_up
+    COMPILE_MODEL=compile_model
+    MODEL_NAME = model.pretrained_cfg['architecture'] if hasattr(model, 'pretrained_cfg') else 'PatchEmbed'
+    BATCH_SIZE = input_shape[0]
+    
+
+        
+    if(COMPILE_MODEL):
+        model = torch.compile(model) 
+        output = model(input)   # Compiling model takes a long time to trace computational graph at the first inference run
+
+    print(f"\n\nMeasuring average inference latecy of {MODEL_NAME} over {MEASURE_TIMES} run.")
+    print(f"  - compile Model = {COMPILE_MODEL}")
+    print(f"  - batch size = {BATCH_SIZE}")
+    print(f"  - transformer blocks = {MODEL_NAME if MODEL_NAME=='PatchEmbed' else num_model_blocks}")
+    print(f"  - nums_threads = {num_threads}")
+    
+    latency_list = []
+    with torch.no_grad():
+        for i in range(MEASURE_TIMES + WARM_UP):            
+            input = torch.randn(BATCH_SIZE,3,224,224)
+            
+            start_time = time.perf_counter()
+            output = model(input)
+            end_time = time.perf_counter()
+            
+            if(i<WARM_UP):  # ignore the first 3 runs
+                continue
+            
+            inference_time = end_time - start_time
+            latency_list.append(inference_time)
+            print(f"Inference time for {num_model_blocks} blocks: iteration_{i - WARM_UP} = {inference_time:.3f} || average = {np.mean(latency_list):.3f} seconds ")
+    # print(latency_list)
+    return np.mean(latency_list)
+
+if __name__ == "__main__":  
+    measure_times = 100
+    num_trheads = 3
+    model = timm.layers.PatchEmbed()
+    patch_embed_latency = measure_latency(model, measure_times=measure_times, num_threads=num_trheads)
+    
+    MODEL_NAME = 'deit_small_patch16_224'
+    model = timm.create_model(MODEL_NAME, pretrained=True)
+
+    time.sleep(10)  # cool-down CPU for fair comparison
+    num_blocks_to_keep = 12
+    full_latency = measure_latency(model, measure_times=measure_times, num_model_blocks=num_blocks_to_keep, num_threads=num_trheads)
+    
+    time.sleep(10)  # cool-down CPU for fair comparison
+    num_blocks_to_keep = 1
+    model.blocks = torch.nn.Sequential(model.blocks[:num_blocks_to_keep])
+    block_latency = measure_latency(model, measure_times=measure_times, num_model_blocks=num_blocks_to_keep, num_threads=num_trheads)
+    print(f"--- Latency(sec) ---")
+    print(f"transformer block + patchEmbed: 1 block = {block_latency} || 12 block = {full_latency}")
+    print(f" - speedup (12 block + 1 patchEmbed)/(1 block + 1 patchEmbed) = {(full_latency)/(block_latency):.2f}\n")
+    print(f"transformer block: 1 block = {block_latency-patch_embed_latency} || 12 block = {full_latency-patch_embed_latency}")
+    print(f" - speedup (12 block/ 1 block) = {(full_latency - patch_embed_latency)/(block_latency - patch_embed_latency):.2f}")
+    print(f"\n - speedup (12 block/ 1 block) = {(full_latency - patch_embed_latency)/(block_latency - patch_embed_latency):.2f}")
